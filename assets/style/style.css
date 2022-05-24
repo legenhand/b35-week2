@@ -1,0 +1,31 @@
+.bg-nav{
+    background-color: #F4F3F3 !important;
+}
+
+.bg-body{
+    background-color: #E3E7EB !important;
+}
+
+.bg-biodata{
+    background-color: #FEFEFE !important;
+}
+
+.bg-img-biodata{
+    background-color: #F8F5F5 !important;
+}
+
+.text-gray{
+    color: #8B888A;
+}
+
+.tech-icon , .tech-icon img, .post-project .tech-icon img{
+    font-size: 25px;
+    height: 3vh;
+    width: auto;
+}
+
+.tech-icon{
+    display: flex;
+    gap: 20px;
+}
+
