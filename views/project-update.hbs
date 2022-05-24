@@ -37,50 +37,51 @@
 </nav>
 <div class="container-fluid">
     <h1 class="text-center my-4 fw-bold">ADD MY PROJECT</h1>
-    <form style="width: 75vh; margin: auto;" action="/add-project" method="POST">
+    <form style="width: 75vh; margin: auto;" action="/project-update/{{data.id}}" method="POST">
         <label for="input-project-name" class="form-label fw-bolder">Project Name </label>
-        <input type="text" class="form-control" id="input-project-name" name="name">
+        <input type="text" class="form-control" id="input-project-name" name="name" value="{{data.name}}">
         <div class="container-fluid mt-3">
             <div class="row">
                 <div class="col ps-0">
                     <label for="input-start-date" class="form-label fw-bolder">Start Date</label>
-                    <input type="date" class="form-control" id="input-start-date" name="start_date">
+                    <input type="date" class="form-control" id="input-start-date" name="start_date" value="{{data.start_date}}">
                 </div>
                 <div class="col px-0">
                     <label for="input-end-date" class="form-label fw-bolder">End Date</label>
-                    <input type="date" class="form-control" id="input-end-date" name="end_date">
+                    <input type="date" class="form-control" id="input-end-date" name="end_date" value="{{data.end_date}}">
                 </div>
             </div>
         </div>
         <label for="input-description" class="form-label fw-bolder mt-3">Description</label>
-        <textarea name="description" id="input-description" cols="30" rows="5" class="form-control"></textarea>
+        <textarea name="description" id="input-description" cols="30" rows="5" class="form-control">{{data.description}}</textarea>
         <label class="form-label fw-bolder mt-3">Technologies</label>
         <div class="container-fluid">
             <div class="row">
                 <div class="col">
-                    <input type="checkbox" name="nodejs" id="node-js" value="Node Js" class="form-check-input">
-                    <label for="node-js" class="form-check-label fw-bolder text-gray"> Node Js</label>
+                    <input type="checkbox" name="nodejs" id="node-js" value="Node Js" class="form-check-input" {{#if data.technologies.nodejs}}checked{{/if}}>
+                    <label for="node-js" class="form-check-label fw-bolder text-gray" > Node Js</label>
                 </div>
                 <div class="col">
-                    <input type="checkbox" name="nextjs" id="next-js" value="Next Js" class="form-check-input">
+                    <input type="checkbox" name="nextjs" id="next-js" value="Next Js" class="form-check-input" {{#if data.technologies.nextjs}}checked{{/if}}>
                     <label for="next-js" class="form-check-label fw-bolder text-gray">Next Js</label>
                 </div>
             </div>
             <div class="row mt-2">
                 <div class="col">
-                    <input type="checkbox" name="reactjs" id="react-js" value="React Js" class="form-check-input">
+                    <input type="checkbox" name="reactjs" id="react-js" value="React Js" class="form-check-input" {{#if data.technologies.reactjs}}checked{{/if}}>
                     <label for="react-js" class="form-check-label fw-bolder text-gray">React Js</label>
                 </div>
                 <div class="col">
-                    <input type="checkbox" name="typescript" id="typeScript-js" value="typeScript" class="form-check-input">
+                    <input type="checkbox" name="typescript" id="typeScript-js" value="typeScript" class="form-check-input" {{#if data.technologies.typescript}}checked{{/if}}>
                     <label for="typescript-js" class="form-check-label fw-bolder text-gray">TypeScript</label>
                 </div>
             </div>
         </div>
         <label for="upload-image" class="form-label fw-bolder mt-3">Upload Image</label>
+        <img src="../public/assets/image/my-image.jpg" alt="foto ilang bossku" class="img-fluid rounded-3" width="64">
         <input class="form-control" type="file" id="upload-image" name="upload-image">
         <div class="container-fluid mt-4 me-0">
-            <button class="btn bg-black text-white float-end me-0 rounded-pill px-5" onclick="addProjects()">Submit</button>
+            <button class="btn bg-black text-white float-end me-0 rounded-pill px-5">Submit</button>
         </div>
     </form>
 </div>
