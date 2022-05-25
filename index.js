@@ -16,7 +16,7 @@ let projects = [{
         nextjs: true,
         typescript: true
         },
-    image: 'my-image.jpg'
+    image: 'webproject.png'
 }];
 
 app.set('view engine', 'hbs'); //setup template engine / view engine
@@ -131,6 +131,7 @@ function addProjects(data) {
         name: data.name,
         start_date: data.start_date,
         end_date: data.end_date,
+        lengthDate: getDateDifference(new Date(data.start_date),new Date (data.end_date)),
         description: data.description,
         technologies: technologies,
         image: data.image
