@@ -19,6 +19,7 @@
   "homepage": "https://github.com/legenhand/b35-week2#readme",
   "dependencies": {
     "express": "^4.18.1",
-    "hbs": "^4.2.0"
+    "hbs": "^4.2.0",
+    "pg": "^8.7.3"
   }
 }

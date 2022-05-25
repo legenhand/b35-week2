@@ -34,7 +34,7 @@ window.onload = () => {
         <div class="container" style="width: 90vw">
             <div class="row">
                 <div class="col">
-                    <img src="assets/image/my-image.jpg" alt="" id="detail-image-project" class="img-fluid">
+                    <img src="assets/image/webproject.png" alt="" id="detail-image-project" class="img-fluid">
                 </div>
                 <div class="col">
                     <div class="container">

@@ -119,7 +119,7 @@ function renderProjects() {
         projectsContainer.innerHTML += `
         <div class="col " >
              <div class="container-fluid border border-3 shadow rounded-3 m-3 p-3">
-                <img src="assets/image/my-image.jpg" alt="foto ilang bossku" class="img-fluid rounded-3">
+                <img src="assets/image/webproject.png" alt="foto ilang bossku" class="img-fluid rounded-3">
                 <h2 class="mb-0 mt-1"><a href="project-detail.html?id=${data.id}" style="text-decoration: none; color: black">${data.title}</a></h2>
                 <p class="text-gray mb-2">durasi : ${data.lengthDate} bulan</p>
                 <p> ${data.description} </p>

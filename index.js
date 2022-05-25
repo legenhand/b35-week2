@@ -1,22 +1,24 @@
 const express = require('express');
 const app = express();
 const port = 8080;
+const db = require('./connection/db');
+
 
 const isLogin = true;
 let projects = [{
     id: 1,
-    name: 'tes only',
+    name: 'Project Web Express JS',
     start_date: '2022-05-24',
     end_date: '2022-08-09',
     lengthDate: getDateDifference(new Date('2022-05-24'),new Date('2022-08-09')),
-    description: 'lorem ipsum katanya mah',
+    description: 'web project menggunakan express js',
     technologies: {
         nodejs : true,
         reactjs: true,
         nextjs: true,
         typescript: true
         },
-    image: 'my-image.jpg'
+    image: 'webproject.png'
 }];
 
 app.set('view engine', 'hbs'); //setup template engine / view engine
@@ -25,18 +27,41 @@ app.use('/public', express.static(__dirname + '/public'));
 
 app.use(express.urlencoded({ extended: false }));
 
+// FOR TESTING ONLY
+
+app.get('/test',(req,res) =>{
+    db.connect(function (err, client, done) {
+        if (err) throw err;
+
+        const query = 'SELECT * FROM tb_projects';
+
+        client.query(query, function (err, result) {
+            if (err) throw err;
+
+            const projectsData = result.rows;
+
+            res.send(projectsData);
+            console.log(projectsData);
+
+        });
+        done();
+    });
+
+});
+
+
 // Routing GET
 app.get('/', (req, res) => {
     res.render('index', {projects:projects});
-})
+});
 
 app.get('/contact-me', (req, res) => {
     res.render('contact-me');
-})
+});
 
 app.get('/project', (req, res) => {
     res.render('project');
-})
+});
 
 app.get('/project-detail/:id', (req, res) => {
     const id = req.params.id;
@@ -131,6 +156,7 @@ function addProjects(data) {
         name: data.name,
         start_date: data.start_date,
         end_date: data.end_date,
+        lengthDate: getDateDifference(new Date(data.start_date),new Date(data.end_date)),
         description: data.description,
         technologies: technologies,
         image: data.image
