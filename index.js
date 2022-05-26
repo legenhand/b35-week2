@@ -30,6 +30,13 @@ app.use(express.urlencoded({ extended: false }));
 // FOR TESTING ONLY
 
 app.get('/test',(req,res) =>{
+
+
+});
+
+
+// Routing GET
+app.get('/', (req, res) => {
     db.connect(function (err, client, done) {
         if (err) throw err;
 
@@ -39,20 +46,11 @@ app.get('/test',(req,res) =>{
             if (err) throw err;
 
             const projectsData = result.rows;
-
-            res.send(projectsData);
-            console.log(projectsData);
-
+            console.log(processDataProjects(projectsData));
+            res.render('index', {projects : projectsData});
         });
         done();
     });
-
-});
-
-
-// Routing GET
-app.get('/', (req, res) => {
-    res.render('index', {projects:projects});
 });
 
 app.get('/contact-me', (req, res) => {
@@ -170,4 +168,25 @@ function updateProjects(id, data){
     projects[elementIndex].end_date = data.end_date;
     projects[elementIndex].description = data.description;
     projects[elementIndex].lengthDate = getDateDifference(new Date(data.start_date),new Date(data.end_date));
+}
+
+
+
+function processDataProjects(data){
+    data.map((x)=>{
+        x.lengthDate = getDateDifference(new Date(x.start_date), new Date(x.end_date));
+        if (x.technologies.includes("nodejs")){
+            x.technologies.nodejs = true;
+        }
+        if (x.technologies.includes("reactjs")){
+            x.technologies.reactjs = true;
+        }
+        if (x.technologies.includes("nextjs")){
+            x.technologies.nextjs = true;
+        }
+        if (x.technologies.includes("typescript")){
+            x.technologies.typescript = true;
+        }
+    })
+    return data;
 }
