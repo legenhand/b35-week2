@@ -62,15 +62,40 @@ app.get('/project', (req, res) => {
 });
 
 app.get('/project-detail/:id', (req, res) => {
-    const id = req.params.id;
-    let data = projects.find(x => x.id == id); // find data from object projects by id
-    res.render('project-detail', { data: data });
+    db.connect(function (err, client, done) {
+        if (err) throw err;
+        const id = req.params.id;
+        const query = 'SELECT * FROM tb_projects';
+
+        client.query(query, function (err, result) {
+            if (err) throw err;
+
+            const projectsData = result.rows;
+            let data = projectsData.find(x => x.id == id); // find data from object projects by id
+            console.log(processDataProjects(projectsData));
+            res.render('project-detail', { data: data });
+        });
+        done();
+    });
 });
 
 app.get('/project-update/:id', (req, res) => {
-    const id = req.params.id;
-    let data = projects.find(x => x.id == id); // find data from object projects by id
-    res.render('project-update', { data: data });
+    db.connect(function (err, client, done) {
+        if (err) throw err;
+        const id = req.params.id;
+        const query = 'SELECT * FROM tb_projects';
+
+        client.query(query, function (err, result) {
+            if (err) throw err;
+
+            const projectsData = result.rows;
+            let data = projectsData.find(x => x.id == id); // find data from object projects by id
+            console.log(processDataProjects(projectsData));
+            res.render('project-update', { data: data });
+        });
+        done();
+    });
+
 });
 
 app.get('/delete-project/:id', (req, res) => {
@@ -170,11 +195,12 @@ function updateProjects(id, data){
     projects[elementIndex].lengthDate = getDateDifference(new Date(data.start_date),new Date(data.end_date));
 }
 
-
-
 function processDataProjects(data){
+    const dateFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
     data.map((x)=>{
         x.lengthDate = getDateDifference(new Date(x.start_date), new Date(x.end_date));
+        x.start_date = x.start_date.toLocaleDateString('id-ID', dateFormatOptions);
+        x.end_date = x.end_date.toLocaleDateString('id-ID', dateFormatOptions);
         if (x.technologies.includes("nodejs")){
             x.technologies.nodejs = true;
         }
