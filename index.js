@@ -82,38 +82,110 @@ app.get('/project-update/:id', (req, res) => {
     db.connect(function (err, client, done) {
         if (err) throw err;
         const id = req.params.id;
-        const query = `SELECT * FROM tb_projects where id = ${id}`;
+        const query = `SELECT id, name, TO_CHAR(start_date, 'yyyy-mm-dd') as start_date, TO_CHAR(end_date, 'yyyy-mm-dd') as end_date, description, technologies, image
+	FROM tb_projects where id=${id};`;
 
         client.query(query, function (err, result) {
             if (err) throw err;
 
             const projectsData = result.rows;
-            let data = processDataProjects(projectsData);
-            res.render('project-update', { data: data[0] });
+            let data = processDataProjects(projectsData,true);
+            console.log(data);
+            res.render('project-update', { data: data[0]} );
+        });
+        done();
+    });
+});
+
+app.get('/delete-project/:id', (req, res) => {
+    db.connect(function (err, client, done) {
+        if (err) throw err;
+        const id = req.params.id;
+        const query = `DELETE FROM tb_projects where id = ${id}`;
+
+        client.query(query, function (err, result) {
+            if (err) throw err;
+            res.redirect('/');
         });
         done();
     });
 
 });
 
-app.get('/delete-project/:id', (req, res) => {
-    const id = req.params.id;
-    const removeIndex = projects.findIndex( item => item.id === id );
-    projects.splice( removeIndex, 1 );
-    res.redirect('/');
-});
-
 // Routing POST
 app.post('/add-project', (req, res) => {
-    addProjects(req.body);
-    res.redirect('/');
+    let data = {
+        name: req.body.name,
+        start_date: req.body.start_date,
+        end_date: req.body.end_date,
+        description: req.body.description,
+        technologies: [],
+        image: req.body.image
+    };
+
+    if (req.body.nodejs){
+        data.technologies.push('nodejs');
+    }
+    if (req.body.reactjs){
+        data.technologies.push('reactjs');
+    }
+    if (req.body.nextjs){
+        data.technologies.push('nextjs');
+    }
+    if (req.body.typescript){
+        data.technologies.push('typescript');
+    }
+    console.log(data.technologies.toString());
+    db.connect(function (err, client, done) {
+        if (err) throw err;
+        const query = `INSERT INTO tb_projects(
+            name, start_date, end_date, description, technologies, image)
+            VALUES ('${data.name}', '${data.start_date}', '${data.end_date}', '${data.description}', '{${data.technologies.toString()}}', '${data.image}');`;
+
+        client.query(query, function (err, result) {
+            if (err) throw err;
+            res.redirect('/');
+        });
+        done();
+    });
 });
 
 app.post('/project-update/:id', (req, res) => {
-    const id = req.params.id;
-    updateProjects(id, req.body);
-    res.redirect('/');
-    console.log(projects)
+    let data = {
+        name: req.body.name,
+        start_date: req.body.start_date,
+        end_date: req.body.end_date,
+        description: req.body.description,
+        technologies: [],
+        image: req.body.image
+    };
+
+    if (req.body.nodejs){
+        data.technologies.push('nodejs');
+    }
+    if (req.body.reactjs){
+        data.technologies.push('reactjs');
+    }
+    if (req.body.nextjs){
+        data.technologies.push('nextjs');
+    }
+    if (req.body.typescript){
+        data.technologies.push('typescript');
+    }
+    console.log(data);
+    db.connect(function (err, client, done) {
+        let id = req.params.id
+        if (err) throw err;
+        const query = `UPDATE tb_projects
+                            SET name='${data.name}', start_date='${data.start_date}', end_date='${data.end_date}', description='${data.description}', technologies='{${data.technologies.toString()}}', image='${data.image}'
+                            WHERE id=${id};`;
+
+        client.query(query, function (err, result) {
+            if (err) throw err;
+            res.redirect('/');
+        });
+        done();
+    });
 });
 
 // Start express app
@@ -121,9 +193,7 @@ app.listen(port, () => {
     console.log(`Server running on 127.0.0.1:${port}`);
 })
 
-
 // function tambahan
-
 
 function getDateDifference(startDate, endDate) {
     if (startDate > endDate) {
@@ -155,32 +225,6 @@ function getDateDifference(startDate, endDate) {
     };
 }
 
-function addProjects(data) {
-    let technologies = {};
-    if (data.nodejs){
-        technologies.nodejs = true;
-    }
-    if (data.reactjs){
-        technologies.reactjs = true;
-    }
-    if (data.nextjs){
-        technologies.nextjs = true;
-    }
-    if (data.typescript){
-        technologies.typescript = true;
-    }
-
-    projects.push({
-        id: Math.floor(Math.random() * 1000000),
-        name: data.name,
-        start_date: data.start_date,
-        end_date: data.end_date,
-        lengthDate: getDateDifference(new Date(data.start_date),new Date(data.end_date)),
-        description: data.description,
-        technologies: technologies,
-        image: data.image
-    });
-}
 
 function updateProjects(id, data){
     let elementIndex = projects.findIndex( item => item.id == id );
@@ -191,12 +235,12 @@ function updateProjects(id, data){
     projects[elementIndex].lengthDate = getDateDifference(new Date(data.start_date),new Date(data.end_date));
 }
 
-function processDataProjects(data){
+function processDataProjects(data, isUpdate=false){
     const dateFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
     data.map((x)=>{
         x.lengthDate = getDateDifference(new Date(x.start_date), new Date(x.end_date));
-        x.start_date = x.start_date.toLocaleDateString('id-ID', dateFormatOptions);
-        x.end_date = x.end_date.toLocaleDateString('id-ID', dateFormatOptions);
+        x.start_date = isUpdate ? x.start_date : x.start_date.toLocaleDateString('id-ID', dateFormatOptions);
+        x.end_date = isUpdate ? x.end_date : x.end_date.toLocaleDateString('id-ID', dateFormatOptions);
         if (x.technologies.includes("nodejs")){
             x.technologies.nodejs = true;
         }
