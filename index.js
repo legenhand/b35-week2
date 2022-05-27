@@ -65,15 +65,14 @@ app.get('/project-detail/:id', (req, res) => {
     db.connect(function (err, client, done) {
         if (err) throw err;
         const id = req.params.id;
-        const query = 'SELECT * FROM tb_projects';
+        const query = `SELECT * FROM tb_projects where id = ${id}`;
 
         client.query(query, function (err, result) {
             if (err) throw err;
 
             const projectsData = result.rows;
-            let data = projectsData.find(x => x.id == id); // find data from object projects by id
-            console.log(processDataProjects(projectsData));
-            res.render('project-detail', { data: data });
+            let data = processDataProjects(projectsData);
+            res.render('project-detail', { data: data[0] });
         });
         done();
     });
@@ -83,15 +82,14 @@ app.get('/project-update/:id', (req, res) => {
     db.connect(function (err, client, done) {
         if (err) throw err;
         const id = req.params.id;
-        const query = 'SELECT * FROM tb_projects';
+        const query = `SELECT * FROM tb_projects where id = ${id}`;
 
         client.query(query, function (err, result) {
             if (err) throw err;
 
             const projectsData = result.rows;
-            let data = projectsData.find(x => x.id == id); // find data from object projects by id
-            console.log(processDataProjects(projectsData));
-            res.render('project-update', { data: data });
+            let data = processDataProjects(projectsData);
+            res.render('project-update', { data: data[0] });
         });
         done();
     });
@@ -113,8 +111,6 @@ app.post('/add-project', (req, res) => {
 
 app.post('/project-update/:id', (req, res) => {
     const id = req.params.id;
-    console.log(id)
-    console.log(req.body);
     updateProjects(id, req.body);
     res.redirect('/');
     console.log(projects)
