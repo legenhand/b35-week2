@@ -2,7 +2,9 @@ const express = require('express');
 const app = express();
 const port = 8080;
 const db = require('./connection/db');
-
+const bcrypt = require('bcrypt');
+const session = require('express-session');
+const flash = require('express-flash');
 
 const isLogin = true;
 let projects = [{
@@ -21,11 +23,25 @@ let projects = [{
     image: 'webproject.png'
 }];
 
+
+
 app.set('view engine', 'hbs'); //setup template engine / view engine
 
 app.use('/public', express.static(__dirname + '/public'));
 
 app.use(express.urlencoded({ extended: false }));
+
+app.use(flash());
+
+app.use(
+    session({
+        secret: 'rahasia',
+        resave: false,
+        saveUninitialized: true,
+        cookie: { maxAge: 1000 * 60 * 60 * 2 },
+    })
+);
+
 
 // FOR TESTING ONLY
 
@@ -45,20 +61,20 @@ app.get('/', (req, res) => {
         client.query(query, function (err, result) {
             if (err) throw err;
 
-            const projectsData = result.rows;
-            console.log(processDataProjects(projectsData));
-            res.render('index', {projects : projectsData});
+            let projectsData = result.rows;
+            projectsData = processDataProjects(projectsData,false , req.session.isLogin);
+            res.render('index', {projects : projectsData, isLogin: req.session.isLogin});
         });
         done();
     });
 });
 
 app.get('/contact-me', (req, res) => {
-    res.render('contact-me');
+    res.render('contact-me', {isLogin: req.session.isLogin});
 });
 
 app.get('/project', (req, res) => {
-    res.render('project');
+    res.render('project', {isLogin: req.session.isLogin});
 });
 
 app.get('/project-detail/:id', (req, res) => {
@@ -72,7 +88,7 @@ app.get('/project-detail/:id', (req, res) => {
 
             const projectsData = result.rows;
             let data = processDataProjects(projectsData);
-            res.render('project-detail', { data: data[0] });
+            res.render('project-detail', { data: data[0], isLogin: req.session.isLogin });
         });
         done();
     });
@@ -91,7 +107,7 @@ app.get('/project-update/:id', (req, res) => {
             const projectsData = result.rows;
             let data = processDataProjects(projectsData,true);
             console.log(data);
-            res.render('project-update', { data: data[0]} );
+            res.render('project-update', { data: data[0], isLogin: req.session.isLogin}, );
         });
         done();
     });
@@ -105,11 +121,24 @@ app.get('/delete-project/:id', (req, res) => {
 
         client.query(query, function (err, result) {
             if (err) throw err;
-            res.redirect('/');
+            res.redirect('/' , {isLogin: req.session.isLogin});
         });
         done();
     });
 
+});
+
+app.get('/login', (req, res) => {
+    res.render('login' , {isLogin: req.session.isLogin});
+});
+
+app.get('/register', (req, res) => {
+    res.render('register', {isLogin: req.session.isLogin});
+});
+
+app.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/');
 });
 
 // Routing POST
@@ -144,7 +173,7 @@ app.post('/add-project', (req, res) => {
 
         client.query(query, function (err, result) {
             if (err) throw err;
-            res.redirect('/');
+            res.redirect('/', );
         });
         done();
     });
@@ -184,6 +213,82 @@ app.post('/project-update/:id', (req, res) => {
             if (err) throw err;
             res.redirect('/');
         });
+        done();
+    });
+});
+
+
+
+// Routing POST for register and login
+
+app.post('/register', (req, res) => {
+    let encryptedPassword = bcrypt.hashSync(req.body.password, 10);
+    let data = {
+        name: req.body.name,
+        email: req.body.email,
+        password: encryptedPassword
+    };
+    db.connect(function (err, client, done) {
+        if (err) throw err;
+        const query = `INSERT INTO tb_user(
+            name, email, password)
+            VALUES ('${data.name}', '${data.email}', '${data.password}');`;
+
+        client.query(query, function (err, result) {
+            if (err) {
+                res.redirect('/register');
+            }else{
+                res.redirect('/login');
+            }
+
+        });
+        done();
+    });
+});
+
+app.post('/login', (req, res) => {
+    const email = req.body.email;
+    const password = req.body.password;
+
+    // if (email == '' || password == '') {
+    //     req.flash('warning', 'Please insert all fields');
+    //     return res.redirect('/login');
+    // }
+
+    db.connect(function (err, client, done) {
+        if (err) throw err;
+
+        const query = `SELECT * FROM tb_user WHERE email = '${email}';`;
+
+        client.query(query, function (err, result) {
+            if (err) throw err;
+
+            const data = result.rows;
+
+            if (data.length == 0) {
+                req.flash('error', 'Email or Password not Match');
+                return res.redirect('/login');
+            }
+
+            const isMatch = bcrypt.compareSync(password, data[0].password);
+
+            if (isMatch == false) {
+                req.flash('error', 'Email or Password not Match');
+                return res.redirect('/login');
+            }
+
+            req.session.isLogin = true;
+            req.session.user = {
+                id: data[0].id,
+                email: data[0].email,
+                name: data[0].name,
+            };
+
+            // console.log('success', `Welcome, <b>${data[0].email}</b>`);
+
+            res.redirect('/');
+        });
+
         done();
     });
 });
@@ -235,12 +340,13 @@ function updateProjects(id, data){
     projects[elementIndex].lengthDate = getDateDifference(new Date(data.start_date),new Date(data.end_date));
 }
 
-function processDataProjects(data, isUpdate=false){
+function processDataProjects(data, isUpdate=false, isLogin= false){
     const dateFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
     data.map((x)=>{
         x.lengthDate = getDateDifference(new Date(x.start_date), new Date(x.end_date));
         x.start_date = isUpdate ? x.start_date : x.start_date.toLocaleDateString('id-ID', dateFormatOptions);
         x.end_date = isUpdate ? x.end_date : x.end_date.toLocaleDateString('id-ID', dateFormatOptions);
+        x.isLogin = isLogin;
         if (x.technologies.includes("nodejs")){
             x.technologies.nodejs = true;
         }

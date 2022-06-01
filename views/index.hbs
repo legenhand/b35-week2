@@ -21,9 +21,18 @@
                     <a class="nav-link active fw-bold" aria-current="page" href="/">Home</a>
                 </li>
                 <li class="nav-item ms-lg-2 mx-sm-0">
-                    <a class="nav-link" href="project">Add Project</a>
+                    {{#if isLogin}}
+                        <a class="nav-link" href="project">Add Project</a>
+                    {{/if}}
                 </li>
             </ul>
+            {{#if isLogin}}
+                <a class="btn " href="logout">Logout</a>
+            {{else}}
+                <a class="btn " href="register">Register</a>
+                <a class="btn " href="login">Login</a>
+            {{/if}}
+
             <a class="btn bg-dark text-white" href="contact-me">Contact Me</a>
         </div>
     </div>
@@ -85,12 +94,15 @@
                         </div>
                         <div class="container-fluid mt-4">
                             <div class="row">
-                                <div class="col-6 ps-0 pe-1">
-                                    <a href="/project-update/{{this.id}}" class="btn btn-block bg-dark text-white mx-0 py-1 w-100">edit</a>
-                                </div>
-                                <div class="col-6 pe-0 ps-1">
-                                    <a href="/delete-project/{{this.id}}" class="btn btn-block bg-dark text-white py-1 w-100">delete</a>
-                                </div>
+                                {{#if this.isLogin}}
+                                    <div class="col-6 ps-0 pe-1">
+                                        <a href="/project-update/{{this.id}}" class="btn btn-block bg-dark text-white mx-0 py-1 w-100">edit</a>
+                                    </div>
+                                    <div class="col-6 pe-0 ps-1">
+                                        <a href="/delete-project/{{this.id}}" class="btn btn-block bg-dark text-white py-1 w-100">delete</a>
+                                    </div>
+                                    {{/if}}
+
                             </div>
                         </div>
                     </div>
