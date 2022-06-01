@@ -5,29 +5,15 @@ const db = require('./connection/db');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const flash = require('express-flash');
+const upload = require('./middlewares/uploadFile');
 
-const isLogin = true;
-let projects = [{
-    id: 1,
-    name: 'Project Web Express JS',
-    start_date: '2022-05-24',
-    end_date: '2022-08-09',
-    lengthDate: getDateDifference(new Date('2022-05-24'),new Date('2022-08-09')),
-    description: 'web project menggunakan express js',
-    technologies: {
-        nodejs : true,
-        reactjs: true,
-        nextjs: true,
-        typescript: true
-        },
-    image: 'webproject.png'
-}];
 
 
 
 app.set('view engine', 'hbs'); //setup template engine / view engine
 
 app.use('/public', express.static(__dirname + '/public'));
+app.use('/uploads', express.static(__dirname + '/uploads'));
 
 app.use(express.urlencoded({ extended: false }));
 
@@ -55,15 +41,30 @@ app.get('/test',(req,res) =>{
 app.get('/', (req, res) => {
     db.connect(function (err, client, done) {
         if (err) throw err;
-
-        const query = 'SELECT * FROM tb_projects';
+        let query;
+        if (req.session.isLogin){
+            query = `SELECT tb_projects.*, tb_user.id as user_id, tb_user.name as author_name
+                FROM tb_projects
+                LEFT JOIN tb_user
+                ON tb_projects.author_id = tb_user.id
+                WHERE tb_user.id = ${req.session.user.id};`
+        }else{
+            query = `SELECT tb_projects.*, tb_user.id as user_id, tb_user.name as author_name
+                FROM tb_projects
+                LEFT JOIN tb_user
+                ON tb_projects.author_id = tb_user.id;`
+        }
 
         client.query(query, function (err, result) {
             if (err) throw err;
 
             let projectsData = result.rows;
+            let name = '';
+            if (req.session.isLogin){
+                name = req.session.user.name;
+            }
             projectsData = processDataProjects(projectsData,false , req.session.isLogin);
-            res.render('index', {projects : projectsData, isLogin: req.session.isLogin});
+            res.render('index', {projects : projectsData, isLogin: req.session.isLogin, name: name});
         });
         done();
     });
@@ -74,6 +75,10 @@ app.get('/contact-me', (req, res) => {
 });
 
 app.get('/project', (req, res) => {
+    if (!req.session.isLogin){
+        req.flash('error', 'Please Login First!')
+        res.redirect('/')
+    }
     res.render('project', {isLogin: req.session.isLogin});
 });
 
@@ -95,6 +100,10 @@ app.get('/project-detail/:id', (req, res) => {
 });
 
 app.get('/project-update/:id', (req, res) => {
+    if (!req.session.isLogin){
+        req.flash('error', 'Please Login First!')
+        res.redirect('/')
+    }
     db.connect(function (err, client, done) {
         if (err) throw err;
         const id = req.params.id;
@@ -114,26 +123,43 @@ app.get('/project-update/:id', (req, res) => {
 });
 
 app.get('/delete-project/:id', (req, res) => {
-    db.connect(function (err, client, done) {
-        if (err) throw err;
-        const id = req.params.id;
-        const query = `DELETE FROM tb_projects where id = ${id}`;
-
-        client.query(query, function (err, result) {
+    if (!req.session.isLogin){
+        req.flash('error', 'Please Login First!')
+        res.redirect('/')
+    }else{
+        db.connect(function (err, client, done) {
             if (err) throw err;
-            res.redirect('/' , {isLogin: req.session.isLogin});
+            const id = req.params.id;
+            const query = `DELETE FROM tb_projects where id = ${id}`;
+
+            client.query(query, function (err, result) {
+                if (err) throw err;
+                req.flash('success', 'Projects deleted!')
+                res.redirect('/');
+            });
+            done();
         });
-        done();
-    });
+    }
+
 
 });
 
 app.get('/login', (req, res) => {
-    res.render('login' , {isLogin: req.session.isLogin});
+    if (req.session.isLogin){
+        req.flash('error', 'You Already login!')
+        res.redirect('/')
+    }else{
+        res.render('login' , {isLogin: req.session.isLogin});
+    }
 });
 
 app.get('/register', (req, res) => {
-    res.render('register', {isLogin: req.session.isLogin});
+    if (req.session.isLogin){
+        req.flash('error', 'You Already login!')
+        res.redirect('/')
+    }else{
+        res.render('register', {isLogin: req.session.isLogin});
+    }
 });
 
 app.get('/logout', (req, res) => {
@@ -142,14 +168,20 @@ app.get('/logout', (req, res) => {
 });
 
 // Routing POST
-app.post('/add-project', (req, res) => {
+app.post('/add-project',upload.single('upload-image'), (req, res) => {
+    if (!req.session.isLogin){
+        req.flash('error', 'Please Login First!')
+        res.redirect('/')
+    }
     let data = {
         name: req.body.name,
         start_date: req.body.start_date,
         end_date: req.body.end_date,
         description: req.body.description,
         technologies: [],
-        image: req.body.image
+        image: req.file.filename,
+        author_id : req.session.user.id
+
     };
 
     if (req.body.nodejs){
@@ -168,25 +200,30 @@ app.post('/add-project', (req, res) => {
     db.connect(function (err, client, done) {
         if (err) throw err;
         const query = `INSERT INTO tb_projects(
-            name, start_date, end_date, description, technologies, image)
-            VALUES ('${data.name}', '${data.start_date}', '${data.end_date}', '${data.description}', '{${data.technologies.toString()}}', '${data.image}');`;
+            name, start_date, end_date, description, technologies, image, author_id)
+            VALUES ('${data.name}', '${data.start_date}', '${data.end_date}', '${data.description}', '{${data.technologies.toString()}}', '${data.image}', '${data.author_id}');`;
 
         client.query(query, function (err, result) {
             if (err) throw err;
+            req.flash('success', 'Your Project has been added!')
             res.redirect('/', );
         });
         done();
     });
 });
 
-app.post('/project-update/:id', (req, res) => {
+app.post('/project-update/:id', upload.single('image'),(req, res) => {
+    if (!req.session.isLogin){
+        req.flash('error', 'Please Login First!')
+        res.redirect('/')
+    }
     let data = {
         name: req.body.name,
         start_date: req.body.start_date,
         end_date: req.body.end_date,
         description: req.body.description,
         technologies: [],
-        image: req.body.image
+        image: req.file.filename
     };
 
     if (req.body.nodejs){
@@ -211,6 +248,7 @@ app.post('/project-update/:id', (req, res) => {
 
         client.query(query, function (err, result) {
             if (err) throw err;
+            req.flash('success', 'Your Project has been updated!')
             res.redirect('/');
         });
         done();
@@ -284,7 +322,7 @@ app.post('/login', (req, res) => {
                 name: data[0].name,
             };
 
-            // console.log('success', `Welcome, <b>${data[0].email}</b>`);
+            req.flash('success', `Welcome, <b>${data[0].email}</b>`);
 
             res.redirect('/');
         });

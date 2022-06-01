@@ -27,16 +27,27 @@
                 </li>
             </ul>
             {{#if isLogin}}
-                <a class="btn " href="logout">Logout</a>
+                <span class="nav-link me-4">Hello, {{name}}</span>
+                <a class="nav-link me-4" href="logout">Logout</a>
             {{else}}
-                <a class="btn " href="register">Register</a>
-                <a class="btn " href="login">Login</a>
+                <a class="nav-link me-4" href="register">Register</a>
+                <a class="nav-link me-4" href="login">Login</a>
             {{/if}}
 
             <a class="btn bg-dark text-white" href="contact-me">Contact Me</a>
         </div>
     </div>
 </nav>
+{{#if messages.success}}
+    <div class='alert alert-success text-center' role='alert'>
+        {{{messages.success}}}
+    </div>
+{{/if}}
+{{#if messages.error}}
+    <div class='alert alert-danger text-center' role='alert'>
+        {{{messages.error}}}
+    </div>
+{{/if}}
 <div class="container-fluid bg-body">
     <div class="container-fluid my-5 px-5 ">
         <div class="row mx-1 bg-biodata rounded-3 shadow-lg">
@@ -73,9 +84,10 @@
             {{#each projects}}
                 <div class="col " >
                     <div class="container-fluid border border-3 shadow rounded-3 m-3 p-3">
-                        <img src="public/assets/image/webproject.png" alt="foto ilang bossku" class="img-fluid rounded-3">
+                        <img src="/uploads/{{this.image}}" alt="foto ilang bossku" class="img-fluid rounded-3">
                         <h2 class="mb-0 mt-1"><a href="project-detail/{{this.id}}" style="text-decoration: none; color: black">{{this.name}}</a></h2>
                         <p class="text-gray mb-2">durasi : {{this.lengthDate.months}} bulan </p>
+                        <p class="text-gray mb-2">author : {{this.author_name}} </p>
                         <p> {{this.description}} </p>
                         <div class="container-fluid tech-icon">
                             {{#if this.technologies.nodejs}}

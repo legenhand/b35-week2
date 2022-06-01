@@ -34,18 +34,18 @@
                 </li>
             </ul>
             {{#if isLogin}}
-                <a class="btn " href="logout">Logout</a>
+                <a class="btn " href="/logout">Logout</a>
             {{else}}
-                <a class="btn " href="register">Register</a>
-                <a class="btn " href="login">Login</a>
+                <a class="btn " href="/register">Register</a>
+                <a class="btn " href="/login">Login</a>
             {{/if}}
-            <a class="btn bg-dark text-white" href="contact-me">Contact Me</a>
+            <a class="btn bg-dark text-white" href="/contact-me">Contact Me</a>
         </div>
     </div>
 </nav>
 <div class="container-fluid">
     <h1 class="text-center my-4 fw-bold">ADD MY PROJECT</h1>
-    <form style="width: 75vh; margin: auto;" action="/project-update/{{data.id}}" method="POST">
+    <form style="width: 75vh; margin: auto;" action="/project-update/{{data.id}}" method="POST" enctype='multipart/form-data'>
         <label for="input-project-name" class="form-label fw-bolder">Project Name </label>
         <input type="text" class="form-control" id="input-project-name" name="name" value="{{data.name}}">
         <div class="container-fluid mt-3">
@@ -86,8 +86,8 @@
             </div>
         </div>
         <label for="upload-image" class="form-label fw-bolder mt-3">Upload Image</label>
-        <img src="../public/assets/image/webproject.png" alt="foto ilang bossku" class="img-fluid rounded-3" width="64">
-        <input class="form-control" type="file" id="upload-image" name="upload-image">
+        <img src="/uploads/{{data.image}}" alt="foto ilang bossku" class="img-fluid rounded-3" width="64">
+        <input class="form-control" type="file" id="upload-image" name="image">
         <div class="container-fluid mt-4 me-0">
             <button class="btn bg-black text-white float-end me-0 rounded-pill px-5">Submit</button>
         </div>
